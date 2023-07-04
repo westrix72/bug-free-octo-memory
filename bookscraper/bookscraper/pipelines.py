@@ -69,10 +69,10 @@ class SaveToMySQLPipeline:
 
     def __init__(self):
         self.conn = mysql.connector.connect(
-            host = "localhost",
-            user = "root",
-            password = "e0PkBN0!2bxp",
-            database = "books"
+            host="localhost",
+            user="root",
+            password="e0PkBN0!2bxp",
+            database="books"
         )
 
         self.cur = self.conn.cursor()
@@ -98,4 +98,57 @@ class SaveToMySQLPipeline:
         """)
 
     def process_item(self, item, spider):
-        pass
+
+        ## Define insert statement
+        self.cur.execute(""" INSERT INTO books (
+                    url, 
+                    title, 
+                    upc, 
+                    product_type, 
+                    price_excl_tax,
+                    price_incl_tax,
+                    tax,
+                    price,
+                    availability,
+                    num_reviews,
+                    stars,
+                    category,
+                    description
+                    ) VALUES (
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s
+                        )""", (
+            item["url"],
+            item["title"],
+            item["upc"],
+            item["product_type"],
+            item["price_excl_tax"],
+            item["price_incl_tax"],
+            item["tax"],
+            item["price"],
+            item["availability"],
+            item["num_reviews"],
+            item["stars"],
+            item["category"],
+            str(item["description"])
+        ))
+
+        ## Execute insert of data into database
+        self.conn.commit()
+        return item
+
+    def close_spider(self, spider):
+
+        self.cur.close()
+        self.conn.close()
