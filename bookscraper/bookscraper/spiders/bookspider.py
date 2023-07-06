@@ -1,5 +1,6 @@
 import scrapy
 from bookscraper.items import BookItem
+import random
 
 
 class BookspiderSpider(scrapy.Spider):
@@ -13,6 +14,14 @@ class BookspiderSpider(scrapy.Spider):
         }
     }
 
+    user_agent_list = [
+        "Mozilla/5.0 (Android; Android 5.1; SM-G925L Build/LMY47X) AppleWebKit/536.18 (KHTML, like Gecko)  Chrome/48.0.1207.121 Mobile Safari/603.3",
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_4_6) Gecko/20100101 Firefox/67.7",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 11_1_4; like Mac OS X) AppleWebKit/537.49 (KHTML, like Gecko)  Chrome/55.0.2252.168 Mobile Safari/602.3",
+        "Mozilla/5.0 (Linux; Android 4.4.4; Nexus5 V7.1 Build/KOT49H) AppleWebKit/537.13 (KHTML, like Gecko)  Chrome/55.0.3722.149 Mobile Safari/537.6",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 9_0_6; like Mac OS X) AppleWebKit/602.45 (KHTML, like Gecko)  Chrome/49.0.1718.240 Mobile Safari/600.3"
+    ]
+
     def parse(self, response):
         books = response.css("article.product_pod")
         for book in books:
@@ -20,14 +29,14 @@ class BookspiderSpider(scrapy.Spider):
             if "catalogue/" not in relative_url:
                 relative_url = "catalogue/" + relative_url
             book_url = "http://books.toscrape.com/" + relative_url
-            yield response.follow(book_url, callback=self.parse_book_page)
+            yield response.follow(book_url, callback=self.parse_book_page, headers={"User-Agent": self.user_agent_list[random.randint(0, len(self.user_agent_list)-1)]})
 
         next_page = response.css(".next a::attr(href)").get()
         if next_page is not None:
             if "catalogue/" not in next_page:
                 next_page = "catalogue/" + next_page
             next_page_url = "http://books.toscrape.com/" + next_page
-            yield response.follow(next_page_url, callback=self.parse)
+            yield response.follow(next_page_url, callback=self.parse, headers={"User-Agent": self.user_agent_list[random.randint(0, len(self.user_agent_list)-1)]})
 
     def parse_book_page(self, response):
         table_rows = response.css("table tr")
